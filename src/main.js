@@ -1,112 +1,93 @@
-import {
-  pixApi,
-  perPage,
-  setCurrentPage,
-  getCurrentPage,
-} from './js/pixabay-api.js';
-import renderImages from './js/render-functions.js';
+import { returnPromise } from './js/pixabay-api';
+import { returnMarkup } from './js/render-functions';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const form = document.querySelector('form');
-const input = document.querySelector('input[data-search]');
-const loader = document.querySelector('.loader-div');
-const list = document.querySelector('.list');
-const moreBtn = document.querySelector('.show-more');
+const elSearchForm = document.querySelector('.js-search-form');
+const elSearchList = document.querySelector('.js-search-list');
+const elLoader = document.querySelector('.js-loader');
+const elLoaderMore = document.querySelector('.js-loader-more');
+const elBtnSearchMore = document.querySelector('.js-search-more');
 
-form.addEventListener('submit', async e => {
-  e.preventDefault();
+let page = 1;
+let totalPage = 1;
+let query = '';
 
-  loader.style.display = 'flex';
-  localStorage.removeItem('search');
-  const search = input.value.trim();
-  list.innerHTML = '';
+elSearchForm.addEventListener('submit', async event => {
+  event.preventDefault();
 
-  setCurrentPage(1);
-  moreBtn.style.visibility = 'hidden';
+  query = elSearchForm.elements.enterForSearsh.value.trim();
+  if (!query) return;
+  if (elBtnSearchMore.classList.contains('is-active')) {
+    elBtnSearchMore.classList.remove('is-active');
+  }
+  elSearchList.innerHTML = '';
+  elLoader.classList.add('is-active');
+  page = 1;
 
   try {
-    const data = await pixApi(search);
-    localStorage.setItem('search', search);
-    const result = data.hits;
-    const totalPages = Math.ceil(data.totalHits / perPage);
-
-    if (result.length !== 0 && search !== '') {
-      renderImages(result, list);
-
-      totalPages > getCurrentPage()
-        ? (moreBtn.style.visibility = 'visible')
-        : (moreBtn.style.visibility = 'hidden');
-    } else {
-      iziToast.show({
-        title: '',
+    const { data } = await returnPromise(query, page);
+    if (!data.total) {
+      elLoader.classList.remove('is-active');
+      iziToast.error({
+        position: 'topRight',
         message:
           'Sorry, there are no images matching your search query. Please try again!',
-        messageColor: 'white',
-        backgroundColor: '#E25757',
+      });
+      elSearchForm.reset();
+      return;
+    }
+
+    elSearchList.innerHTML = `${returnMarkup(data.hits)}`;
+    elLoader.classList.remove('is-active');
+    elBtnSearchMore.classList.add('is-active');
+
+    if (data.totalHits < 15) {
+      elBtnSearchMore.classList.remove('is-active');
+      iziToast.info({
         position: 'topRight',
+        message: "We're sorry, but you've reached the end of search results.",
       });
     }
+    lightbox.refresh();
   } catch (error) {
-    console.error('Помилка при рендері картинок', error);
-    moreBtn.style.visibility = 'hidden';
-    iziToast.show({
-      title: '',
-      message: 'Sorry, check your internet connection!',
-      messageColor: 'white',
-      backgroundColor: '#E25757',
-      position: 'topRight',
-      timeout: 5000,
-    });
-  } finally {
-    loader.style.display = 'none';
-    e.target.reset();
+    console.log(error);
   }
 });
 
-//button more
-moreBtn.addEventListener('click', async () => {
-  loader.style.display = 'flex';
-  const searchRemember = localStorage.getItem('search');
-
-  setCurrentPage(getCurrentPage() + 1);
+elBtnSearchMore.addEventListener('click', async () => {
+  elLoaderMore.classList.add('is-active-more');
+  elBtnSearchMore.classList.remove('is-active');
 
   try {
-    const data = await pixApi(searchRemember);
-    const result = data.hits;
-    const card = document.querySelector('.card');
-    const totalPages = Math.ceil(data.totalHits / perPage);
+    const { data } = await returnPromise(query, ++page);
+    elSearchList.insertAdjacentHTML('beforeend', `${returnMarkup(data.hits)}`);
 
-    renderImages(result, list);
+    elLoaderMore.classList.remove('is-active-more');
+    elBtnSearchMore.classList.add('is-active');
+    lightbox.refresh();
 
-    if (totalPages > getCurrentPage()) {
-      moreBtn.style.visibility = 'visible';
-    } else {
-      iziToast.show({
-        title: '❌',
-        message: "We're sorry, but you've reached the end of search results.",
-        messageColor: 'white',
-        backgroundColor: '#E25757',
-        position: 'topRight',
-        timeout: 5000,
-      });
-      moreBtn.style.visibility = 'hidden';
-    }
-
-    const cardHeight = Math.floor(card.getBoundingClientRect().height);
-    scrollBy(0, cardHeight * 2);
-  } catch (error) {
-    console.error('Помилка при рендері картинок', error);
-
-    iziToast.show({
-      title: '❌',
-      message: 'Sorry, check your internet connection!',
-      messageColor: 'white',
-      backgroundColor: '#E25757',
-      position: 'topRight',
-      timeout: 5000,
+    window.scrollBy({
+      top: elSearchList.firstChild.getBoundingClientRect().height * 2,
+      behavior: 'smooth',
     });
-  } finally {
-    loader.style.display = 'none';
+
+    totalPage = Math.ceil(data.totalHits / 15);
+    if (totalPage === page) {
+      elBtnSearchMore.classList.remove('is-active');
+      iziToast.info({
+        position: 'topRight',
+        message: "We're sorry, but you've reached the end of search results.",
+      });
+    }
+  } catch (error) {
+    console.log(error);
   }
+});
+
+const lightbox = new SimpleLightbox('.gallery-link', {
+  captionsData: 'alt',
+  captionDelay: 250,
 });
