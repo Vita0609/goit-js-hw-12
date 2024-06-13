@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const apiKey = '43901454-2f0f1ad212df2deb6dd93021b';
+const apiKey = '44362939-998edb8f92844eab0dd18e81c';
 
 let currentPage = 1;
 let perPage = 15;
