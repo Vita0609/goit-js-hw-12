@@ -1,43 +1,40 @@
-import 'izitoast/dist/css/iziToast.min.css';
-import iziToast from 'izitoast';
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
 
-export function showErrorMessage(message) {
-  iziToast.error({
-    title: 'Error',
-    message,
-  });
+export function createMarkup(arr, listElement) {
+    const markup = arr
+        .map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) => `
+        <li class="item">
+        <a class="item-link" href="${largeImageURL}">
+        <img class="item-img" src="${webformatURL}" alt="${tags}" />
+        <div class="wrapper">
+        <div class="span-wrapper">
+        <span class="span-name">Likes</span>
+        <span class="span-value">${likes}</span>
+        </div>
+        <div class="span-wrapper">
+        <span class="span-name">Views</span>
+        <span class="span-value">${views}</span>
+        </div>
+        <div class="span-wrapper">
+        <span class="span-name">Comments</span>
+        <span class="span-value">${comments}</span>
+        </div>
+        <div class="span-wrapper">
+        <span class="span-name">Downloads</span>
+        <span class="span-value">${downloads}</span>
+        </div>
+        </div>
+        </a>
+        </li>
+        `)
+        .join("");
+    listElement.insertAdjacentHTML("beforeend", markup);
+    gallery.refresh();
 }
 
-export function createCard(image) {
-  return `
-    <div class="gallery-item">
-      <a href="${image.largeImageURL}" class="gallery-link">
-        <img src="${image.webformatURL}" alt="${
-    image.tags
-  }" class="gallery-image" />
-      </a>
-      <div class="item-info-block">
-        ${createInfo('Likes', image.likes)}
-        ${createInfo('Views', image.views)}
-        ${createInfo('Comments', image.comments)}
-        ${createInfo('Downloads', image.downloads)}
-      </div>
-    </div>
-  `;
-}
-
-function createInfo(label, value) {
-  return `
-    <div class="block">
-      <p class="title">${label}</p>
-      <p class="amount">${value}</p>
-    </div>
-  `;
-}
-
-export function updateGallery(images) {
-  const galleryListEl = document.querySelector('.gallery');
-
-  const cardsHTML = images.map(image => createCard(image)).join('');
-  galleryListEl.insertAdjacentHTML('beforeend', cardsHTML);
-}
+let gallery = new SimpleLightbox('.list a', { 
+    sourceAttr: "href",
+    captionsData: "alt",
+    captionDelay: 250
+ });

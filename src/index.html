@@ -2,32 +2,29 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>goit-js-hw-11</title>
+    <title>goit-js-hw-12</title>
     <link rel="stylesheet" href="./css/styles.css" />
   </head>
   <body>
-    <form class="js-search search">
-      <input
-        class="input-search"
-        name="search"
-        type="text"
-        placeholder="Enter search term"
-      />
-      <button class="btn-search" type="submit">Search</button>
+    <form class="form">
+      <label class="label">
+        <input
+          class="input"
+          type="text"
+          name="input-search"
+          placeholder="Search images..."
+          required
+        />
+      </label>
+      <button class="button" type="submit">Search</button>
     </form>
-    <div class="container">
-      <ul class="gallery"></ul>
-      <div class="footer-gallery">
-        <button class="btn-load-more is-hidden" type="submit">Load more</button>
-        <p class="end-text is-hidden">
-          We're sorry, but you've reached the end of search results.
-        </p>
-        <div class="loader is-hidden"></div>
-      </div>
-    </div>
-
+    <div class="loader-top"></div>
+    <ul class="list"></ul>
+    <div class="loader"></div>
+    <button class="button load-more" type="button">Load more</button>
     <script type="module" src="./main.js"></script>
+    <script type="module" src="./js/pixabay-api.js"></script>
+    <script type="module" src="./js/render-functions.js"></script>
   </body>
 </html>
